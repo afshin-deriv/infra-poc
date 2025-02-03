@@ -1,0 +1,11 @@
+config:
+  aws:region: us-west-2
+  aws:assumeRoleARN: arn:aws:iam::111111111111:role/pulumi-deployment-role
+  customer1:vpcId: vpc-12345
+  customer1:subnetIds:
+    - subnet-1
+    - subnet-2
+  customer1:dbPassword:
+    secure: AQICAHiRqIVlAgN4yZ3Kx+qK6oE+XK8AwqD+JMFGvZ4XP4nT8QFZCJ2Kx+qK6oE+XK8A=
+  customer1:apiKey:
+    secure: AQICAHiRqIVlAgN4yZ3Kx+qK6oE+XK8AwqD+JMFGvZ4XP4nT8QFZCJ2Kx+qK6oE+XK8B=
