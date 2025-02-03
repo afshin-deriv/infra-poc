@@ -1,0 +1,8 @@
+name: customer1-dev
+runtime: go
+description: Customer1 Development Infrastructure
+backend:
+  url: s3://pulumi-state-customer1-111111111111/dev # References backend bucket
+encryption:
+  provider: aws-kms
+  key-id: ${BACKEND_KMS_KEY_ARN} # Will be set after backend deployment

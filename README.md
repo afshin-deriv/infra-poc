@@ -6,129 +6,114 @@ This repository demonstrates a secure and scalable approach to managing infrastr
 
 ## Repository Structure
 ```
-├── components/             # Reusable infrastructure components
-│   ├── ecs/                # ECS Cluster and Service definitions
-│   └── secrets/            # Secrets management utilities
-├── customers/              # Customer-specific implementations
-│   ├── customer1/          # Customer 1 (AWS Account: 111111111111)
-│   │   ├── dev/            # Development environment
-│   │   └── prod/           # Production environment
-│   └── customer2/          # Customer 2 (AWS Account: 222222222222)
-│       ├── dev/
-│       └── prod/
-└── .github/
-    └── workflows/          # Automated deployment workflows
+infrastructure/
+├── components/
+│   ├── ecs/
+│   └── secrets/
+└── customers/
+    ├── customer1/
+    │   ├── backend/        # Customer1's backend infrastructure
+    │   │   ├── main.go     # S3/KMS setup
+    │   │   └── Pulumi.yaml
+    │   ├── dev/
+    │   │   ├── main.go     # Dev environment (references backend outputs)
+    │   │   └── Pulumi.yaml # Uses backend S3/KMS
+    │   └── prod/
+    │       ├── main.go     # Prod environment (references backend outputs)
+    │       └── Pulumi.yaml # Uses backend S3/KMS
+    └── customer2/
+        ├── backend/        # Customer2's backend infrastructure
+        │   ├── main.go     # Different S3/KMS in different account
+        │   └── Pulumi.yaml
+        ├── dev/
+        └── prod/
 ```
 
-## Setup Guide
+## Setup
+1. Deploy Backend Infrastructure
+For each customer AWS account:
+```
+# Deploy backend infrastructure (S3 bucket and KMS key)
+cd backend
+pulumi stack init backend-customer1
+pulumi up
 
-### 1. AWS Account Setup
-Each customer requires their own AWS account with proper IAM configuration:
+# Note the outputs for use in next steps:
+# - bucketName: Your S3 bucket for state
+# - kmsKeyId: Your KMS key for encryption
+```
+
+2. Update Stack Configuration
+Update each environment's Pulumi.yaml:
+```yaml
+name: customer1-dev
+runtime: go
+description: Customer1 Development Infrastructure
+backend:
+  url: s3://<bucket-name>/customer1/dev
+encryption:
+  provider: aws-kms
+  key-id: <kms-key-arn>
+```
+
+3. Initialize Stacks
+For each environment:
 ```bash
-# For each customer AWS account (e.g., 111111111111, 222222222222)
-aws iam create-role --role-name pulumi-deployment-role
-aws iam attach-role-policy \
-    --role-name pulumi-deployment-role \
-    --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
-# Configure OIDC trust relationship for GitHub Actions
-# (Add through AWS Console or CLI - see documentation for OIDC setup)
-```
-
-### 2. GitHub Repository Configuration
-Add these secrets to your GitHub repository:
-```
-PULUMI_ACCESS_TOKEN=pul-xxxx                                                       # Pulumi access token
-AWS_OIDC_ROLE_ARN=arn:aws:iam::111111111111:role/pulumi-deployment-role            # Customer 1
-AWS_OIDC_ROLE_ARN_CUSTOMER2=arn:aws:iam::222222222222:role/pulumi-deployment-role  # Customer 2
-```
-
-### 3. Pulumi Stack Configuration
-For each customer environment:
-```bash
-# Initialize stack
 cd customers/customer1/dev
-pulumi stack init dev
-
-# Configure AWS credentials
+pulumi stack init customer1-dev --secrets-provider="aws-kms"
 pulumi config set aws:region us-west-2
-pulumi config set --secret aws:assumeRoleARN \
-    arn:aws:iam::ACCOUNT_ID:role/pulumi-deployment-role
 ```
 
-## Secret Management
-
-### Secrets Structure
-Secrets are stored hierarchically in AWS Secrets Manager:
-```bash
-/customer/environment/service/key
-Example: /customer1/dev/api/DB_PASSWORD
-```
-
-### Accessing Secrets
-In your Pulumi code:
-```go
-// Retrieve a secret
-secretValue, err := secrets.GetSecret(ctx, "api/DB_PASSWORD")
-
-// Create a new secret
-_, err := secrets.CreateSecret(ctx, &secrets.SecretArgs{
-    CustomerName: "customer1",
-    Environment: "dev",
-    ServiceName: "api",
-    SecretKey:   "DB_PASSWORD",
-    SecretValue: pulumi.String("mypassword"),
-})
-```
+4. Required IAM Permissions
+The deployment role needs these permissions:
+- S3 access for state management
+- KMS access for encryption
+- Permissions to deploy resources
+_See iam/deployment-role-policy.json for the complete policy._
 
 ## Deployment Workflows
-
-### Initial Deployment (Day 1)
-Manual deployment for initial setup:
-```bash
-# Deploy development environment
-cd customers/customer1/dev
+1. First, deploy backend infrastructure:
+```
+# Deploy backend for Customer1
+cd customers/customer1/backend
+pulumi stack init backend
 pulumi up
 
-# Deploy production environment
-cd customers/customer1/prod
+# Get outputs for environment configuration
+export BACKEND_BUCKET=$(pulumi stack output stateBucketName)
+export BACKEND_KMS_KEY=$(pulumi stack output stateKmsKeyArn)
+
+# Configure dev environment
+cd ../dev
+pulumi stack init dev --secrets-provider="aws-kms"
+pulumi config set aws:region us-west-2
+# Set backend configuration using outputs from backend stack
+```
+2. Then deploy environment infrastructure:
+```
+# Deploy dev environment
+cd customers/customer1/dev
 pulumi up
 ```
 
-### Ongoing Deployments (Day 2)
-Automated via GitHub Actions:
-- Push to main branch → Deploys to development
-- Create GitHub Release → Deploys to production
-
 ## Security Best Practices
-1. AWS Account Isolation
-- Separate AWS account per customer
-- Environment segregation within accounts
-- Least privilege IAM policies
+Each customer would have their own:
+- S3 bucket for state
+- KMS key for encryption
+- IAM roles and permissions
+- All in their own AWS account
 
-2. Secrets Management
-- AWS Secrets Manager for sensitive data
-- SSM Parameter Store for configuration
-- All secrets encrypted at rest and in transit
+- State files are stored in your AWS account
+- Encryption is handled by AWS KMS
+- No Pulumi login required
+- Access controlled via IAM
 
-3. Access Control
-- GitHub Actions OIDC for AWS authentication
-- No long-lived AWS credentials
-- Role-based access with minimal permissions
+This separation ensures:
+- Complete isolation between customers
+- Customer-specific access controls
+- Clear resource ownership
+- Independent state management
 
-## Testing Instructions
-1. Clone the repository
-2. Update AWS account IDs in configuration files:
-  - GitHub Actions workflows
-  - Pulumi stack configurations
-3. Push changes to trigger development deployment
-4. Create a release to trigger production deployment
-5. Monitor deployments in GitHub Actions tab
-
-## Troubleshooting
-Common issues and solutions:
-  - OIDC authentication failures: Verify trust relationship configuration
-  - Pulumi access errors: Check role permissions and stack configurations
-  - Secret access denied: Verify IAM permissions for Secrets Manager
 
 ## Contributing
 External contributions are not open. However, if you have a fix or improvement, feel free to open a pull request. I may review and merge PRs.
