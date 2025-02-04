@@ -59,10 +59,7 @@ pulumi new aws-go \
 pulumi config set aws:region us-east-1
 pulumi stack init organization/project1/staging
 pulumi config set env1-name env1-value
-pulumi config set --secret secret1 S3cr37
-
-pulumi config get secret1
-pulumi config get env1-name
+pulumi config set --secret dbSecret S3cr37-db-password
 pulumi up
 
 cd customers/customer1/project1/prod
@@ -96,7 +93,8 @@ pulumi new aws-go \
 Each customer would have their own:
 
 - S3 bucket for state
-- KMS key for encryption
+- KMS key for pulumi encryption
+- AWS Secrets Manager Secret to store sensitive data
 - IAM roles and permissions
 - All in their/our own AWS account
 - Code reusability in IoC
