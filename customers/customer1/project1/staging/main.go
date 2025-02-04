@@ -12,7 +12,8 @@ func main() {
 			return err
 		}
 
-		// Export values for use in CI/CD
+		// ARN of the AWS Secrets Manager secret
+		// to be used in CI/CD and App code
 		ctx.Export("secretArn", secret.Arn)
 		return nil
 	})

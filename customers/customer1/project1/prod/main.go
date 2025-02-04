@@ -1,20 +1,20 @@
 package main
 
 import (
-	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/s3"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/secretsmanager"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
-		// Create an AWS resource (S3 Bucket)
-		bucket, err := s3.NewBucketV2(ctx, "my-bucket", nil)
+		secret, err := secretsmanager.NewSecret(ctx, "dbSecret", &secretsmanager.SecretArgs{})
 		if err != nil {
 			return err
 		}
 
-		// Export the name of the bucket
-		ctx.Export("bucketName", bucket.ID())
+		// ARN of the AWS Secrets Manager secret
+		// to be used in CI/CD and App code
+		ctx.Export("secretArn", secret.Arn)
 		return nil
 	})
 }

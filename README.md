@@ -61,9 +61,9 @@ pulumi stack init organization/project1/staging
 pulumi config set env1-name env1-value
 pulumi config set --secret dbSecret S3cr37-db-password
 pulumi up
+pulumi stack output secretArn
 
 cd customers/customer1/project1/prod
-
 aws s3api create-bucket --bucket customer1-prod-pulumi-bucket --region us-east-1
 aws s3api put-bucket-versioning --bucket customer1-prod-pulumi-bucket --versioning-configuration Status=Enabled
 
@@ -85,6 +85,8 @@ pulumi new aws-go \
   --stack prod \
   --yes
 ..
+pulumi up
+pulumi stack output secretArn
 
 ```
 
