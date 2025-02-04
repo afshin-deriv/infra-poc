@@ -34,13 +34,12 @@ infrastructure/
 For each customer AWS account:
 ```
 # Deploy backend infrastructure (S3 bucket and KMS key)
-cd backend
+customers/customer1/backend
+pulumi login s3://customer1-bucket-name
 pulumi stack init backend-customer1
+pulumi config set --secret aws:kmsKeyId "arn:aws:kms:region:account-id:key/key-id"
+pulumi stack ls
 pulumi up
-
-# Note the outputs for use in next steps:
-# - bucketName: Your S3 bucket for state
-# - kmsKeyId: Your KMS key for encryption
 ```
 
 2. Update Stack Configuration
