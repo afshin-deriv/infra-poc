@@ -35,10 +35,10 @@ For each customer AWS account:
 ```
 # Deploy backend infrastructure (S3 bucket and KMS key)
 cd customers/customer1/project1/staging
-aws s3api create-bucket --bucket afshin-customer1-pulumi-bucket --region us-east-1
-aws s3api put-bucket-versioning --bucket afshin-customer1-pulumi-bucket --versioning-configuration Status=Enabled
+aws s3api create-bucket --bucket customer1-staging-pulumi-bucket --region us-east-1
+aws s3api put-bucket-versioning --bucket customer1-staging-pulumi-bucket --versioning-configuration Status=Enabled
 
-aws s3api put-bucket-encryption --bucket afshin-customer1-pulumi-bucket --server-side-encryption-configuration '{
+aws s3api put-bucket-encryption --bucket customer1-staging-pulumi-bucket --server-side-encryption-configuration '{
   "Rules": [
     {
       "ApplyServerSideEncryptionByDefault": {
@@ -48,7 +48,7 @@ aws s3api put-bucket-encryption --bucket afshin-customer1-pulumi-bucket --server
   ]
 }'
 
-pulumi login s3://afshin-customer1-pulumi-bucket
+pulumi login s3://customer1-staging-pulumi-bucket
 
 pulumi new aws-go \
   --name project1 \
@@ -66,6 +66,22 @@ pulumi config get env1-name
 pulumi up
 
 cd customers/customer1/project1/prod
+
+aws s3api create-bucket --bucket customer1-prod-pulumi-bucket --region us-east-1
+aws s3api put-bucket-versioning --bucket customer1-prod-pulumi-bucket --versioning-configuration Status=Enabled
+
+aws s3api put-bucket-encryption --bucket customer1-prod-pulumi-bucket --server-side-encryption-configuration '{
+  "Rules": [
+    {
+      "ApplyServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "aws:kms"
+      }
+    }
+  ]
+}'
+
+pulumi login s3://customer1-prod-pulumi-bucket
+
 pulumi new aws-go \
   --name project1 \
   --description "A minimal AWS Go Pulumi program for customer1" \
@@ -87,7 +103,7 @@ Each customer would have their own:
 
 This separation ensures:
 
-- Complete isolation between customers
+- Complete isolation between customers and thier environments
 - Customer-specific access controls
 - Clear resource ownership
 - Independent state management
