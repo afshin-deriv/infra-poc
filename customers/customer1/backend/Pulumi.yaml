@@ -1,3 +1,0 @@
-name: customer1-backend
-runtime: go
-description: Backend infrastructure for Customer1 Pulumi state management
