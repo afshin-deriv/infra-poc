@@ -1,9 +1,11 @@
-name: Deploy Customer1 Prod Infra
+name: Deploy Customer1 Staging Infra
 
 on:
   push:
     branches:
       - master
+    paths:
+      - 'customers/customer1/project1/staging/**'  # Trigger only on changes in this directory
   workflow_dispatch:
 
 jobs:
@@ -29,6 +31,6 @@ jobs:
       - name: Deploy Pulumi Stack
         run: |
           pulumi login s3://customer1-prod-pulumi-bucket
-          pulumi stack select organization/project1/staging
-          cd customers/customer1/project1/staging
+          pulumi stack select organization/project1/prod
+          cd customers/customer1/project1/prod
           pulumi up --yes

@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 'customers/customer1/project1/prod/**'  # Trigger only on changes in this directory
   workflow_dispatch:
 
 jobs:
