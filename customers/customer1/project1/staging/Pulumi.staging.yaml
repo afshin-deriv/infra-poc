@@ -1,6 +1,3 @@
-encryptionsalt: v1:axUbuavOFYU=:v1:L+jqkeDs0Z1RvpH4:bLfyESO2wh793zuHyfxIou2TrxAZrQ==
+encryptionsalt: v1:24ahEPasRkA=:v1:8/2KLlBAgRJ2RwtM:8Tlu1QCgB5gFpUA60C01R5lqdONrpg==
 config:
   aws:region: us-east-1
-  project1:env1-name: env1-value
-  project1:secret1:
-    secure: v1:vNh0sgo0QodKEAQP:SM5V58HUq2LDo2btj+GajPh0151Bcw==
