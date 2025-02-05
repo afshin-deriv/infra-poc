@@ -2,6 +2,7 @@ package main
 
 import (
 	ec2comp "github.com/afshin-deriv/infra-poc/components/ec2"
+
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
